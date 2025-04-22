@@ -325,5 +325,31 @@ for message_flag in ['81', 'c3', 'c4', 'c5']:
 팬트리난방.register_command(message_flag = '44', attr_name = 'targettemp', topic_class = 'temperature_command_topic', process_func = lambda v: format(int(float(v) // 1 + float(v) % 1 * 128 * 2), '02x'))
 팬트리난방.register_command(message_flag = '45', attr_name = 'away_mode', topic_class = 'away_mode_command_topic', process_func = lambda v: '01' if v =='ON' else '00')
 
+#엘리베이터
+client.publish(
+    "homeassistant/switch/elevator_call/config",
+    json.dumps({
+        "name": "엘리베이터 호출",
+        "command_topic": "mqtt_rs485/dev/command",
+        "state_topic": "mqtt_rs485/elevator/call_status",
+        "payload_on": "elevator_call",
+        "payload_off": "off",
+        "unique_id": "elevator_call_button",
+        "device": {"identifiers": ["elevator_controller"], "name": "Elevator Controller"}
+    }),
+    retain=True
+)
+client.publish(
+    "homeassistant/sensor/elevator_floor/config",
+    json.dumps({
+        "name": "엘리베이터 현재 층",
+        "state_topic": "mqtt_rs485/elevator/floor",
+        "unique_id": "elevator_floor_sensor",
+        "device_class": "enum",
+        "options": ["B2", "B1"] + [str(i) for i in range(1, 21)],
+        "device": {"identifiers": ["elevator_controller"], "name": "Elevator Controller"}
+    }),
+    retain=True
+)
 
 wallpad.listen()
