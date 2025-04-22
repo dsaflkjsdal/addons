@@ -9,6 +9,14 @@ MQTT_PASSWORD = '!Teatime6699'
 MQTT_SERVER = '192.168.200.68'
 ROOT_TOPIC_NAME = 'rs485_2mqtt'
 HOMEASSISTANT_ROOT_TOPIC_NAME = 'homeassistant'
+#엘리베이터 추가1
+MQTT_ELEVATOR_CALL_STATUS = "mqtt_rs485/elevator/call_status"
+MQTT_ELEVATOR_FLOOR = "mqtt_rs485/elevator/floor"
+MQTT_ELEVATOR_ARRIVED = "mqtt_rs485/elevator/arrived"
+
+ELEVATOR_CALL_PACKET = bytes.fromhex("F7 33 01 81 03 00 24 00 63 36")
+elevator_called = False
+#엘리베이터 추가1 끝끝
 
 class Device:
     def __init__(self, device_name, device_id, device_subid, device_class, child_device, mqtt_discovery, optional_info):
@@ -70,9 +78,42 @@ class Device:
             'name': self.device_name
         }
         return json_dumps(result, ensure_ascii = False)
-
     def get_status_attr_list(self):
         return list(set([status['attr_name'] for status_list in self.__status_messages_map.values() for status in status_list]))
+#엘리베이터 추가2 시작
+def on_message(client, userdata, msg):
+    global elevator_called
+    payload = msg.payload.decode()
+
+    if msg.topic == MQTT_TOPIC:
+        if payload == "elevator_call":
+            print("[엘리베이터] 호출 명령 수신")
+            ser.write(ELEVATOR_CALL_PACKET)
+            elevator_called = True
+            client.publish(MQTT_ELEVATOR_CALL_STATUS, "on")
+        else:
+            # 기존 명령 처리 로직 그대로 유지
+            
+if elevator_called and len(line) >= 7:
+    if line[0] == 0xF7 and line[3] == 0x44:  # 층수 정보 패킷
+        floor_hex = line[5]
+        if floor_hex == 0xF1:
+            floor = "B1"
+        elif floor_hex == 0xF2:
+            floor = "B2"
+        else:
+            floor = str(floor_hex)
+
+        client.publish(MQTT_ELEVATOR_FLOOR, floor)
+        print(f"[엘리베이터] 현재 층수: {floor}")
+
+        if floor == "19":
+            print("[엘리베이터] 19층 도착")
+            client.publish(MQTT_ELEVATOR_ARRIVED, "true")
+            client.publish(MQTT_ELEVATOR_CALL_STATUS, "off")
+            elevator_called = False
+
+#엘리베이터 추가2 끝
 
 class Wallpad:
     _device_list = []
