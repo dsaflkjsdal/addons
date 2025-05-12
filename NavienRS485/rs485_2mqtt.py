@@ -135,20 +135,6 @@ class Wallpad:
                     if self.is_valid(payload_hexstring):
                         payload_dict = re.match(r'f7(?P<device_id>0e|12|32|33|36)(?P<device_subid>[0-9a-f]{2})(?P<message_flag>[0-9a-f]{2})(?:[0-9a-f]{2})(?P<data>[0-9a-f]*)(?P<xor>[0-9a-f]{2})(?P<add>[0-9a-f]{2})', payload_hexstring).groupdict()
                         
-                    # 층수 처리 로직 추가
-                    if payload_dict['device_id'] == '33' and payload_dict['message_flag'] == '44':  # 엘리베이터 ID와 플래그 확인
-                        floor_data = re.match(r'01([\da-fA-F]{2})', payload_dict['data'])
-                        if floor_data:
-                            floor = floor_data[1]  # 변환 없이 그대로 사용
-                            floor_topic = '/'.join([ROOT_TOPIC_NAME, 'sensor', '엘리베이터', 'floor'])
-                            client.publish(floor_topic, floor, qos=1, retain=False)
-                    
-                    # 엘리베이터 OFF 처리 로직 추가
-                    if payload_hexstring == 'f7330144010484f8':  # F7 33 01 44 01 04 84 F8
-                        elevator_device = self.get_device(device_name='엘리베이터')
-                        off_topic = '/'.join([ROOT_TOPIC_NAME, elevator_device.device_class, elevator_device.device_name, 'power'])
-                        client.publish(off_topic, 'OFF', qos=1, retain=False)
-                        
                         for topic, value in self.get_device(device_id = payload_dict['device_id'], device_subid = payload_dict['device_subid']).parse_payload(payload_dict).items():
                             client.publish(topic, value, qos = 1, retain = False)
                     else:
@@ -300,11 +286,11 @@ for message_flag in ['81', 'c3', 'c4', 'c5']:
 
 ### 엘리베이터 ###
 # 엘리베이터, 일괄 제어 용도의 패킷이지만 엘리베이터 호출 용도로만 사용해도 무방
-optional_info = {'optimistic': 'false'}
-엘리베이터 = wallpad.add_device(device_name = '엘리베이터', device_id = '33', device_subid = '01', device_class = 'switch', optional_info = optional_info)
-엘리베이터.register_status(message_flag = '01', attr_name = 'power', topic_class ='state_topic', regex = r'(0[01])', process_func = lambda v: 'OFF')
-엘리베이터.register_status(message_flag = '01', attr_name = 'availability', topic_class ='availability_topic', regex = r'(0[01])', process_func = lambda v: 'online')
-엘리베이터.register_command(message_flag = '81', attr_name = 'power', topic_class = 'command_topic', process_func = lambda v: '03 00 24 00 63 36' if v == 'ON' else '03 00 24 00 63 36') # 엘리베이터 호출 # F7 33 01 43 01 10 97 16
+#optional_info = {'optimistic': 'false'}
+#엘리베이터 = wallpad.add_device(device_name = '엘리베이터', device_id = '33', device_subid = '01', device_class = 'switch', optional_info = optional_info)
+#엘리베이터.register_status(message_flag = '01', attr_name = 'power', topic_class ='state_topic', regex = r'(0[01])', process_func = lambda v: 'OFF')
+#엘리베이터.register_status(message_flag = '01', attr_name = 'availability', topic_class ='availability_topic', regex = r'(0[01])', process_func = lambda v: 'online')
+#엘리베이터.register_command(message_flag = '81', attr_name = 'power', topic_class = 'command_topic', process_func = lambda v: '03 00 24 00 63 36' if v == 'ON' else '03 00 24 00 63 36') # 엘리베이터 호출 # F7 33 01 43 01 10 97 16
 # 호출패킷  F7 33 01 81 03 00 24 00 63 36
 # 도착 알림 패킷 F7 33 01 57 00 92 14 (추정) 층수 패킷 F7 33 01 44 01 04 84 F8
 
