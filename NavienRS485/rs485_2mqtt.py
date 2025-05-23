@@ -287,7 +287,7 @@ for message_flag in ['81', 'c3', 'c4', 'c5']:
 ### 엘리베이터 ###
 # 엘리베이터, 일괄 제어 용도의 패킷이지만 엘리베이터 호출 용도로만 사용해도 무방
 optional_info = {'optimistic': 'false'}
-엘리베이터 = wallpad.add_device(device_name = '엘리베이터', device_id = '33', device_subid = '01', device_class = 'switch', optional_info = 'false')
+엘리베이터 = wallpad.add_device(device_name = '엘리베이터', device_id = '33', device_subid = '01', device_class = 'switch', optional_info {'optimistic': 'false')
 엘리베이터.register_status(message_flag = '57', attr_name = 'power', topic_class ='state_topic', regex = r'(00)', process_func = lambda v: 'OFF')
 엘리베이터.register_status(message_flag = '01', attr_name = 'availability', topic_class ='availability_topic', regex = r'(0[01])', process_func = lambda v: 'online')
 else:  # homeassistant에서 명령으로 MQTT topic을 publish하는 경우
