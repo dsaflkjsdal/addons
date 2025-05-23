@@ -287,9 +287,25 @@ for message_flag in ['81', 'c3', 'c4', 'c5']:
 ### 엘리베이터 ###
 # 엘리베이터, 일괄 제어 용도의 패킷이지만 엘리베이터 호출 용도로만 사용해도 무방
 optional_info = {'optimistic': 'false'}
-엘리베이터 = wallpad.add_device(device_name = '엘리베이터', device_id = '33', device_subid = '01', device_class = 'switch', optional_info = optional_info)
-엘리베이터.register_status(message_flag = '01', attr_name = 'power', topic_class ='state_topic', regex = r'(0[01])', process_func = lambda v: 'OFF')
+엘리베이터 = wallpad.add_device(device_name = '엘리베이터', device_id = '33', device_subid = '01', device_class = 'switch', optional_info = 'false')
+엘리베이터.register_status(message_flag = '57', attr_name = 'power', topic_class ='state_topic', regex = r'(00)', process_func = lambda v: 'OFF')
 엘리베이터.register_status(message_flag = '01', attr_name = 'availability', topic_class ='availability_topic', regex = r'(0[01])', process_func = lambda v: 'online')
-엘리베이터.register_command(message_flag = '43', attr_name = 'power', topic_class = 'command_topic', process_func = lambda v: '10' if v == 'ON' else '10') # 엘리베이터 호출 수정전 # F7 33 01 43 01 10 97 16
+else:  # homeassistant에서 명령으로 MQTT topic을 publish하는 경우
+    topic_split = msg.topic.split('/')
+    # 엘리베이터 스위치 ON 명령이면 호출 패킷 전송
+    if len(topic_split) > 4 and topic_split[2] == '엘리베이터' and topic_split[3] == 'power':
+        if msg.payload.decode().upper() == 'ON':
+            client.publish(
+                ROOT_TOPIC_NAME + '/dev/command',
+                bytes.fromhex("f7 33 01 81 03 00 24 00 63 36"),
+                qos=2,
+                retain=False
+            )
+        # OFF 명령이면 아무 것도 안 함
+    else:
+        device = self.get_device(device_name = topic_split[2])
+        payload = device.get_command_payload_byte(topic_split[3], msg.payload.decode())
+        client.publish(ROOT_TOPIC_NAME + '/dev/command', payload, qos=2, retain=False) 
+        # 엘리베이터 호출 수정전 # F7 33 01 43 01 10 97 16
 #실제 호출 패킷 F7 33 01 81 03 00 24 00 63 36 층수는 f7 33 01 44 01 다음이 나오는 숫자 그대로가 층수(10진수,16진수 변환 없음)
 wallpad.listen()
