@@ -4,9 +4,9 @@ from json import dumps as json_dumps
 from functools import reduce
 from collections import defaultdict
 
-MQTT_USERNAME = 'eunj'
-MQTT_PASSWORD = '!Teatime6699'
-MQTT_SERVER = '192.168.200.68'
+MQTT_USERNAME = '이준희'
+MQTT_PASSWORD = '01074190727'
+MQTT_SERVER = '192.168.31.30'
 ROOT_TOPIC_NAME = 'rs485_2mqtt'
 HOMEASSISTANT_ROOT_TOPIC_NAME = 'homeassistant'
 
@@ -151,7 +151,7 @@ class Wallpad:
     def on_disconnect(self, client, userdata, rc):
         raise ConnectionError
 
-MQTT_SERVER = '192.168.200.68'
+MQTT_SERVER = '192.168.31.30'
 ROOT_TOPIC_NAME = 'rs485_2mqtt'
 HOMEASSISTANT_ROOT_TOPIC_NAME = 'homeassistant'
 wallpad = Wallpad()
